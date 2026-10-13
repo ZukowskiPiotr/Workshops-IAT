@@ -1,0 +1,20 @@
+(() => {
+ const el=document.querySelector('#experiment');
+ try {
+  IAT.session={active:true};
+  const jsPsychInstance=initJsPsych({display_element:el,show_progress_bar:false,
+   on_finish:()=>IAT.renderResults(el,IAT.score(jsPsychInstance.data.get().values()))});
+  const condition=IAT.assignCondition();
+  const design=IAT.buildDesign(condition, a=>jsPsychInstance.randomization.shuffle(a));
+  const screen=html=>({type:IAT.Screen,html});
+  const timeline=[{...screen(`<p class="eyebrow">LABORATORIUM NEURONAUKI SPOŁECZNEJ · UAM</p><h1>Płeć i nauka</h1><p class="lead">Jak szybko łączymy słowa z kategoriami?</p><p>To edukacyjna demonstracja IAT, czyli Testu Utajonych Skojarzeń. Zajmuje zwykle około 5–8 minut i nie jest indywidualną diagnozą psychologiczną.</p><p>Nie prosimy o dane osobowe. Odpowiedzi i wynik są obliczane tylko w pamięci tej przeglądarki i znikają po odświeżeniu. Serwis hostingowy może przetwarzać techniczne informacje o połączeniu; aplikacja nie zapisuje adresu IP ani lokalizacji.</p><div class="notice"><strong>Udział jest dobrowolny.</strong> Możesz odmówić albo zakończyć go w dowolnej chwili, bez konsekwencji i bez podawania powodu. Wyniku nie musisz nikomu pokazywać. Jeśli masz 16–17 lat, rozpocznij tylko po wyjaśnieniu przez organizatora zasad udziału i spełnieniu wymaganych zgód. Przycisk nie zastępuje zgody rodzica/opiekuna ani procedur instytucji, jeśli są wymagane.</div><p>Przygotuj spokojne miejsce. Wyłącz powiadomienia, trzymaj telefon w jednej orientacji i pozostań na tej stronie.</p>`),button:'Chcę dobrowolnie wziąć udział'},
+   screen(`<p class="eyebrow">JAK WYKONAĆ ZADANIE</p><h1>Szybko i dokładnie</h1><p>Na środku pojawi się słowo. Dotknij dolnego przycisku z właściwą kategorią. W części bloków jeden przycisk będzie obejmował dwie kategorie — wystarczy, że słowo pasuje do jednej z nich.</p><p>Pracuj tak szybko i poprawnie, jak potrafisz. Czerwony ✕ oznacza błąd: dotknij właściwej strony, aby przejść dalej. Błędy są spodziewane.</p><p>Kategorie zmienią strony w trakcie zadania. Przed każdym blokiem sprawdź nowe etykiety.</p><h2>Przykładowe słowa w kategoriach</h2><div class="examples">${Object.values(IAT.categories).map(c=>`<p><strong>${c.label}</strong><br>${c.words.join(', ')}</p>`).join('')}</div>`)];
+  for(const b of design){
+   const text=b.block===1?'Ćwicz kategoryzację słów dotyczących płci.':b.block===2?'Ćwicz kategoryzację dziedzin nauki.':b.block===5?'Uwaga: kategorie płci zamieniły strony. Teraz przećwicz nowy układ.':b.block===6?'Nowe połączenia kategorii. Sprawdź uważnie etykiety.':[3].includes(b.block)?'Teraz sortuj słowa z wszystkich czterech kategorii.':'Kontynuuj w tym samym układzie.';
+   timeline.push({timeline:[{...screen(`<p class="eyebrow">BLOK ${b.block} Z 7 · ${b.count} PRÓB</p><h1>${[4,7].includes(b.block)?'Kategoryzacja łączona':'Ćwiczenie'}</h1><p>${text}</p><div class="mapping-preview"><div><small>LEWA STRONA</small><p>${IAT.labels(b.left)}</p></div><div><small>PRAWA STRONA</small><p>${IAT.labels(b.right)}</p></div></div><p>Dotykaj przycisków szybko i dokładnie. Po błędzie popraw odpowiedź. Możesz zrobić przerwę teraz, przed rozpoczęciem bloku.</p>`),button:'Rozpocznij blok'},
+    ...b.trials.map(spec=>({timeline:[{type:IAT.Touch,spec,post_trial_gap:IAT.config.gap}],conditional_function:()=>IAT.session.active}))],conditional_function:()=>IAT.session.active});
+  }
+  el.innerHTML=""; // jsPsych appends its content wrapper; remove the loading screen.
+  jsPsychInstance.run(timeline);
+ } catch(err){el.innerHTML=`<section class="sheet"><h1>Nie udało się uruchomić zadania</h1><p>Sprawdź pliki aplikacji i odśwież stronę. Komunikat: <span id="message"></span></p></section>`;el.querySelector('#message').textContent=err.message;}
+})();
