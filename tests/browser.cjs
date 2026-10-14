@@ -30,8 +30,22 @@ const root=path.join(__dirname,'..');
   let count=0, intentionalError=false;
   for(let b=1;b<=7;b++){
    await page.locator('#next').click();
-   for(let t=0;t<[20,20,20,40,40,20,40][b-1];t++){
+   for(let t=0;t<[15,15,15,30,30,15,30][b-1];t++){
     await page.locator('.response:not([disabled])').first().waitFor();
+    assert.equal(await page.locator('.assignments').count(),0);
+    assert.equal(await page.locator('.response').count(),2);
+    assert.equal(await page.locator('.trial header').textContent(),`Blok ${b} / 7Próba ${t+1} / ${[15,15,15,30,30,15,30][b-1]}`);
+    const progress=await page.locator('progress').evaluate(e=>({value:e.value,max:e.max}));
+    assert.equal(progress.max,150);assert.equal(progress.value,count);assert(progress.value<150);
+    if(t===0 && [1,3].includes(b)){
+     for(const size of [[320,568],[375,667],[390,844],[360,640],[568,320]]){
+      await page.setViewportSize({width:size[0],height:size[1]});
+      const layout=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth,buttons:[...document.querySelectorAll('.response')].map(e=>{const r=e.getBoundingClientRect(),c=getComputedStyle(e);return {x:r.x,y:r.y,bottom:r.bottom,h:r.height,w:r.width,background:c.backgroundColor,color:c.color,scroll:e.scrollHeight,client:e.clientHeight};}),stim:document.querySelector('.stimulus').getBoundingClientRect().toJSON()}));
+      assert(!layout.overflow);assert(layout.buttons.every(x=>x.x>=0&&x.bottom<=size[1]&&x.h>=44&&x.scroll<=x.client));assert.equal(layout.buttons[0].background,layout.buttons[1].background);assert.equal(layout.buttons[0].background,'rgb(40, 36, 110)');assert.equal(layout.buttons[0].color,'rgb(255, 255, 255)');assert.equal(layout.buttons[0].w,layout.buttons[1].w);assert(layout.stim.bottom<layout.buttons[0].y);
+     }
+     await page.setViewportSize({width:320,height:568});
+     if(b===3)await page.screenshot({path:'/tmp/iat-shortened-trial-mobile.png'});
+    }
     const correct=await page.evaluate(()=>{const word=document.querySelector('.stimulus').textContent;const cat=Object.keys(IAT.categories).find(c=>IAT.categories[c].words.includes(word));return document.querySelector('.response.left').textContent.includes(IAT.categories[cat].label)?'left':'right';});
     if(!intentionalError){
      await page.locator('.response.'+(correct==='left'?'right':'left')).tap();await page.waitForTimeout(100);assert(await page.locator('.error').textContent());assert.equal(await page.locator('.stimulus').count(),1);intentionalError=true;
@@ -40,18 +54,18 @@ const root=path.join(__dirname,'..');
    }
   }
   await page.locator('#restart').waitFor();const data=await page.evaluate(()=>qaRows.filter(t=>t.experimental_trial));
-  assert.equal(data.length,200);assert(data.every(t=>t.completed));assert.equal(data.filter(t=>t.error).length,1);assert(data[0].correction_rt>=0);assert(data[0].total_rt>=data[0].initial_rt);assert.equal(await page.locator('.trial').count(),0);
+  assert.equal(data.length,150);assert.equal(await page.locator('progress').evaluate(e=>e.value/e.max),1);assert.equal(count,150);assert(data.every(t=>t.completed));assert.equal(data.filter(t=>t.error).length,1);assert(data[0].correction_rt>=100);assert(data[0].total_rt>=data[0].initial_rt);assert.equal(await page.locator('.trial').count(),0);
   await page.locator('#restart').click();await page.locator('#next').waitFor();await page.locator('#next').click();await page.locator('#next').click();await page.locator('#next').click();await page.locator('#stop').click();await page.locator('#restart').waitFor();assert.equal(await page.locator('.trial').count(),0);assert((await page.locator('h1').textContent()).includes('niedostępny'));
   // Timeout must abort, never silently skip a trial.
   await page.route('**/js/config.js',async route=>{const s=fs.readFileSync(path.join(root,'js/config.js'),'utf8').replace('timeout: 60000','timeout: 150');await route.fulfill({contentType:'text/javascript',body:s});});
   await page.reload();await page.locator('#next').click();await page.locator('#next').click();await page.locator('#next').click();await page.locator('#restart').waitFor();assert((await page.locator('h1').textContent()).includes('niedostępny'));
   // Valid synthetic dataset checks numerical result DOM, not device validity.
   await page.evaluate(()=>{
-   const rows=IAT.buildDesign({first:'B',genderLeft:'male'},a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}).flatMap(b=>b.trials.map((t,i)=>({...t,completed:true,initial_response:t.correct_response,initial_correct:true,error:false,initial_rt:(t.mapping==='B'?800:600)+(i%2?50:-50),total_rt:(t.mapping==='B'?800:600)+(i%2?50:-50),interrupted:false})));
+   const rows=IAT.buildDesign({first:'B',genderLeft:'male'},a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}).flatMap(b=>b.trials.map((t,i)=>({...t,completed:true,initial_response:t.correct_response,initial_correct:true,error:false,initial_rt:(t.mapping==='B'?800:600)+((i%3-1)*50),total_rt:(t.mapping==='B'?800:600)+((i%3-1)*50),interrupted:false})));
    IAT.renderResults(document.querySelector('#experiment'),IAT.score(rows));
   });
-  assert.equal(await page.locator('.score').count(),1);assert.equal(await page.locator('.comparison').count(),2);assert(await page.locator('.score').textContent());
+  assert.equal(await page.locator('.score').count(),1);assert.equal(await page.locator('.comparison').count(),2);assert((await page.locator('.results').textContent()).includes('90/90'));assert(await page.locator('.score').textContent());
   await page.screenshot({path:'/tmp/iat-results-mobile.png',fullPage:true});
-  assert.deepEqual(errors,[]);console.log('PASS Chrome touchscreen emulation: 200 completed trials; correction; 7 block instructions; result gating; restart; withdrawal; inactivity abort; numerical results DOM; no JS errors; nested /demo/ paths; viewports '+JSON.stringify(checks));
+  assert.deepEqual(errors,[]);console.log('PASS Chrome touchscreen emulation: 150 completed trials; correction; 7 block instructions; result gating; restart; withdrawal; inactivity abort; numerical results DOM; no JS errors; nested /demo/ paths; viewports '+JSON.stringify(checks));
  }finally{if(browser)await browser.close();server.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

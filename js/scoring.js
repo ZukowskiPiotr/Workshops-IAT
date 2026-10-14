@@ -4,8 +4,8 @@
  IAT.score = rows => {
   const trials = rows.filter(t=>t.experimental_trial), scored=trials.filter(t=>[3,4,6,7].includes(t.block));
   const fail = reason => ({valid:false,reason});
-  if (trials.length!==200 || IAT.config.counts.some((n,i)=>trials.filter(t=>t.block===i+1).length!==n) ||
-      new Set(trials.map(t=>`${t.block}:${t.trial_number}`)).size!==200) return fail('Zadanie nie zostało ukończone.');
+  if (trials.length!==IAT.config.totalTrials || IAT.config.counts.some((n,i)=>trials.filter(t=>t.block===i+1).length!==n) ||
+      new Set(trials.map(t=>`${t.block}:${t.trial_number}`)).size!==IAT.config.totalTrials) return fail('Zadanie nie zostało ukończone.');
   if (trials.some(t=>!t.completed || !Number.isFinite(t.total_rt) || t.total_rt<=0 ||
       !Number.isFinite(t.initial_rt) || t.initial_rt<0 || t.total_rt<t.initial_rt ||
       !['left','right'].includes(t.initial_response) || !['left','right'].includes(t.correct_response) ||
@@ -14,7 +14,7 @@
       t.error !== !t.initial_correct)) return fail('Brakuje prawidłowo zapisanych odpowiedzi.');
   if (trials.some(t=>t.interrupted)) return fail('Zadanie zostało zakłócone zmianą karty, aplikacji lub orientacji ekranu. Spróbuj ponownie w spokojnych warunkach.');
   // D1: latency to final correct response; implicit error cost, no +600 ms.
-  // Fast-response denominator = all 120 combined trials, before slow exclusion.
+  // Fast-response denominator = all configured combined trials, before slow exclusion.
   if (scored.filter(t=>t.total_rt<300).length/scored.length>0.1) return fail('Ponad 10% odpowiedzi w blokach łączonych trwało krócej niż 300 ms.');
   if (scored.filter(t=>t.error).length/scored.length>IAT.config.maximumErrorFraction) return fail('Zbyt dużo błędów, aby pokazać miarodajny wynik tej demonstracji.');
   const blocks = {};

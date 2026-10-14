@@ -2,7 +2,7 @@
  const C = IAT.categories;
  IAT.validateStimuli = () => {
   const seen = new Set(), sizes = Object.values(C).map(c => c.words.length);
-  if (!sizes[0] || !sizes.every(n => n === sizes[0]) || [5,10,20].some(n => n % sizes[0])) throw Error('Zestawy muszą mieć równą liczebność dzielącą 5, 10 i 20.');
+  if (!sizes[0] || !sizes.every(n => n === sizes[0])) throw Error('Zestawy muszą mieć równą, niezerową liczebność.');
   Object.values(C).forEach(c => c.words.forEach(w => {
    if (typeof w !== 'string' || !w.trim() || /[<>]/.test(w) || seen.has(w)) throw Error('Nieprawidłowy lub powtórzony bodziec.');
    seen.add(w);
@@ -27,10 +27,20 @@
    const right = block === 2 ? [rightDomain] : combined ? [other(genderLeft),rightDomain] : [other(genderLeft)];
    const mapping = combined ? (reversed ? (condition.first === 'A' ? 'B' : 'A') : condition.first) : null;
    const cats = [...left,...right];
-   // Exact frequency per exemplar. Constrained random sampling avoids runs >3 on a side,
-   // >2 of a category, and immediate identical stimuli without changing counts.
-   const pool = cats.flatMap(category => Array.from({length:count/cats.length/C[category].words.length}, () =>
-    C[category].words.map(stimulus => ({stimulus, category, correct_response:left.includes(category)?'left':'right'}))).flat());
+   // Category counts differ by at most one. Randomise which categories receive
+   // extra trials; for 30 combined trials give one extra to each response side.
+   const perCategory = Math.floor(count/cats.length), remainder = count%cats.length;
+   const extras = combined && remainder===2 ? [shuffle(left)[0],shuffle(right)[0]] : shuffle(cats).slice(0,remainder);
+   const pool = cats.flatMap(category => {
+    const n=perCategory+Number(extras.includes(category)), words=C[category].words;
+    // Full shuffled cycles plus a random partial cycle keep exemplar counts
+    // within one per category, without dropping words from the configuration.
+    const sampled=[];
+    while(sampled.length<n) sampled.push(...shuffle(words).slice(0,n-sampled.length));
+    return sampled.map(stimulus=>({stimulus,category,correct_response:left.includes(category)?'left':'right'}));
+   });
+   // Preserve the existing sequence constraints: no identical adjacent words,
+   // >2 consecutive instances of a category or >3 consecutive correct sides.
    let sequence;
    for (let attempt=0; attempt<1000; attempt++) {
     const remaining=shuffle(pool), candidate=[];

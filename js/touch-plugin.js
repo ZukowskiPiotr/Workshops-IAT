@@ -17,7 +17,8 @@
   trial(el,t){
    const s=t.spec; let onset=null, ended=false, timer, feedback=null, initial=null, interrupted=false;
    const corrections=[];
-   el.innerHTML=`<div class="trial"><header><span>Blok ${s.block} / 7</span><span>Próba ${s.trial_number} / ${IAT.config.counts[s.block-1]}</span></header><progress aria-label="Postęp bloków" value="${s.block-1}" max="7"></progress><div class="assignments"><div>${labels(s.left_assignment)}</div><div>${labels(s.right_assignment)}</div></div><div class="stage"><div class="stimulus" style="visibility:hidden">${s.stimulus}</div><div class="error" aria-live="polite"></div></div><div class="responses"><button class="response left" data-side="left" disabled>${labels(s.left_assignment)}</button><button class="response right" data-side="right" disabled>${labels(s.right_assignment)}</button></div><footer>Dotknij odpowiedniej strony · <button id="stop">Zakończ udział</button></footer></div>`;
+   const completedBefore=IAT.config.counts.slice(0,s.block-1).reduce((n,c)=>n+c,0)+s.trial_number-1;
+   el.innerHTML=`<div class="trial"><header><span>Blok ${s.block} / 7</span><span>Próba ${s.trial_number} / ${IAT.config.counts[s.block-1]}</span></header><progress aria-label="Postęp zadania" value="${completedBefore}" max="${IAT.config.totalTrials}"></progress><div class="stage"><div class="stimulus" style="visibility:hidden">${s.stimulus}</div><div class="error" aria-live="polite"></div></div><div class="responses"><button class="response left" data-side="left" disabled>${labels(s.left_assignment)}</button><button class="response right" data-side="right" disabled>${labels(s.right_assignment)}</button></div><footer>Dotknij odpowiedniej strony · <button id="stop">Zakończ udział</button></footer></div>`;
    const buttons=[...el.querySelectorAll('.response')], error=el.querySelector('.error');
    const disturb=()=>{if(onset!==null) interrupted=true;};
    const visibility=()=>{if(document.hidden) disturb();};
@@ -26,6 +27,10 @@
     if(ended)return;ended=true;cleanup();
     if(!completed)IAT.session.active=false;
     const end=performance.now(), final=corrections[corrections.length-1];
+    if(completed) {
+     IAT.session.completedTrials=completedBefore+1;
+     el.querySelector('progress').value=IAT.session.completedTrials;
+    }
     el.innerHTML='';this.jsPsych.finishTrial({...s,completed,reason,initial_response:initial?.side??null,
      initial_correct:initial?initial.side===s.correct_response:null,initial_rt:initial?.rt??null,error:initial?initial.side!==s.correct_response:null,
      correction_response:final?.side??null,correction_rt:final?final.rt-initial.rt:null,

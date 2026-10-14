@@ -1,13 +1,13 @@
-# Polish Gender–Science IAT — LSN workshop
+# Shortened Polish Gender–Science IAT — LSN workshop
 
-A static, browser-local, touchscreen demonstration for approximately 16–17-year-old students. The existing folder name `gender-career-iat` is preserved, but **this application implements Gender–Science**, with academic domains rather than career/family categories. No account, install, participant identifier, database, analytics, or paid service is needed.
+A static, browser-local, touchscreen demonstration for approximately 16–17-year-old students. The project folder is `Workshops-IAT`; **this application implements Gender–Science**, with academic domains rather than career/family categories. No account, install, participant identifier, database, analytics, or paid service is needed.
 
 ## Start here
 
 Open this folder in VS Code: **File → Open Folder**, then **Terminal → New Terminal**. On macOS:
 
 ```sh
-cd /Users/zukowskipiotr/Documents/LSN/Noc_Anglistow/gender-career-iat
+cd /Users/zukowskipiotr/Documents/LSN/Noc_Anglistow/Workshops-IAT
 python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
@@ -22,7 +22,7 @@ Think of the timeline as an E-Prime Procedure and the trial plugin as a reusable
 | `index.html` | Entry point, Polish language, viewport, ordered relative script imports, failure message. |
 | `js/stimuli.js` | The four category labels and all 20 words. Edit materials here. |
 | `js/config.js` | Counts, 250 ms blank interval, 60 s inactivity timeout, workshop quality gates, version. |
-| `js/design.js` | Session counterbalancing, exact stimulus frequencies, constrained random sequences, mappings. |
+| `js/design.js` | Session counterbalancing, approximately balanced stimulus frequencies, constrained random sequences, mappings. |
 | `js/experiment.js` | jsPsych initialisation, introduction, voluntary participation, instructions and seven-block timeline. |
 | `js/touch-plugin.js` | Two local jsPsych 8 plugins: instruction screen and timed touch trial; onset, responses, error correction, interruption and withdrawal. |
 | `js/scoring.js` | Pure browser-local D1 scoring and validation. |
@@ -36,40 +36,46 @@ Think of the timeline as an E-Prime Procedure and the trial plugin as a reusable
 | `LICENSE` | MIT licence for application source. |
 | `.nojekyll` | Tells Pages to serve this as a plain static site. |
 
-`index.html` loads jsPsych first, then materials/configuration, design, scoring, results, plugins and experiment. jsPsych runs the timeline and keeps trial rows in memory. Each plugin finishes by passing a row to `finishTrial`. The final callback passes experimental rows to the scorer and renders results. Instruction screens never count toward the 200 trials. There is no permanent storage or data download in the participant interface.
+`index.html` loads jsPsych first, then materials/configuration, design, scoring, results, plugins and experiment. jsPsych runs the timeline and keeps trial rows in memory. Each plugin finishes by passing a row to `finishTrial`. The final callback passes experimental rows to the scorer and renders results. Instruction screens never count toward the 150 trials. There is no permanent storage or data download in the participant interface.
 
 No npm install, build, package manifest, external font, CDN, backend or extra application file is needed. **All runtime dependencies are included.** The jsPsych npm stable tag was checked on 13 October 2026 and resolved to 8.3.0. The distribution came from `https://registry.npmjs.org/jspsych/-/jspsych-8.3.0.tgz`; local custom plugins use the compatible class/`static info`/`ParameterType`/`finishTrial` API. No external plugin versions are mixed. The remote source-map comment was removed from the bundled file to prevent developer tools requesting an external map. If the local vendor file is missing, the loading message stays visible and the console identifies the failure. There is no silent CDN fallback that would create an extra external connection.
 
 ## Experimental procedure
 
+This is a **shortened, workshop-oriented adaptation** of the conventional 200-trial IAT: seven blocks now contain 15/15/15/30/30/15/30 trials (150 total, 90 combined). D1 scoring is unchanged; fewer observations may reduce precision/reliability. Identical psychometric properties to the conventional version must not be assumed without validation. The introductory 4–6 minute duration is an approximate planning estimate, not a measured participant norm.
+
+The upper trial category labels and their coloured lines were removed; labels remain inside both bottom response buttons. Progress tracks completed experimental trials (0–150), reaches 100% only after the final correct response and stays below 100% after withdrawal/timeout. Block/trial counters remain visible.
+
+The CSS custom properties use the supplied approximate LSN references: indigo `#28246E`, cyan `#00A3C7`, crimson `#DE1940`, lavender `#D7CAD1`, white `#FFFFFF`, with darker neutral text and a pale neutral surface. These are not verified institutional brand specifications; no original logo image was available. Both response alternatives have identical indigo backgrounds and white type, independent of categories and conditions. A darker cyan variant (`#0087A5`) accents progress and comparison bars for graphical contrast; crimson marks errors. Typography, dimensions and touchscreen timing remain unchanged.
+
 | Block | Task | Trials |
 |---|---|---:|
-| 1 | Gender practice | 20 |
-| 2 | Academic-domain practice | 20 |
-| 3 | First combined practice | 20 |
-| 4 | First combined test | 40 |
-| 5 | Reversed gender practice | 40 |
-| 6 | Second combined practice | 20 |
-| 7 | Second combined test | 40 |
-| **Total** | Instructions excluded | **200** |
+| 1 | Gender practice | 15 |
+| 2 | Academic-domain practice | 15 |
+| 3 | First combined practice | 15 |
+| 4 | First combined test | 30 |
+| 5 | Reversed gender practice | 30 |
+| 6 | Second combined practice | 15 |
+| 7 | Second combined test | 30 |
+| **Total** | Instructions excluded | **150** |
 
 Mapping **A** pairs KOBIETA with NAUKI HUMANISTYCZNE and MĘŻCZYZNA with NAUKI ŚCISŁE. Mapping **B** pairs KOBIETA with NAUKI ŚCISŁE and MĘŻCZYZNA with NAUKI HUMANISTYCZNE. Two unbiased bits from `crypto.getRandomValues` select A/B first and female/male initially left: four equiprobable conditions. This is independent participant-session randomisation, not a person identifier. Reloading draws again. It gives approximate balance in expectation, **not guaranteed exact workshop balance**. No local counter can coordinate different phones.
 
-Gender starts in its assigned positions in block 1. Academic-domain sides in block 2 are chosen to produce the assigned first mapping. Domain sides stay fixed; gender sides reverse in block 5 and remain reversed in 6–7. Exactly half the trials require each side. Single blocks have equal category counts; combined blocks have 5 or 10 trials per category. With five words/category every word occurs equally often (2 or 4 times in a single block, 1 or 2 times in a combined block). The constrained sampler disallows consecutive identical words, more than two consecutive instances of a category and more than three consecutive correct sides. It restarts when constraints leave no eligible item, with a bounded failure message. This is constrained randomisation, not uniform sampling over all possible permutations; gender/domain trials are intermixed rather than forced alternation.
+Gender starts in its assigned positions in block 1. Academic-domain sides in block 2 are chosen to produce the assigned first mapping. Domain sides stay fixed; gender sides reverse in block 5 and remain reversed in 6–7. Category counts differ by at most one: single-category 15-trial blocks have 7/8 trials, the 30-trial reversal has 15/15, combined practice has 3/4/4/4 and combined test has 7/7/8/8. Which categories receive extra trials is randomised afresh, independent of identity and mapping. In 30-trial combined blocks one extra category is drawn from each response side, ensuring 15 responses per side; 15-trial blocks have 7/8 responses per side. Within each category, complete shuffled word cycles and a random partial cycle keep exemplar frequencies within one; all original materials remain in the configuration. A 15-trial combined block cannot show all 20 exemplars: its subset is sampled randomly, while each 30-trial combined block shows every exemplar. The constrained sampler disallows consecutive identical words, more than two consecutive instances of a category and more than three consecutive correct sides. It restarts when constraints leave no eligible item, with a bounded failure message. This is constrained randomisation, not uniform sampling over all possible permutations; gender/domain trials are intermixed rather than forced alternation.
 
 Later exact balance could use a backend allocating unused conditions from randomly permuted blocks of four atomically, or a coordinator distributing equal sets of single-use condition links. The latter needs an implemented and validated assignment override plus control of reuse; this release has no URL condition override. Repeated completions by the same student are affected by practice and are not independent sessions for scientific analysis.
 
 ## Materials: provisional Polish adaptation
 
-Gender uses paired familiar kinship terms: matka/ojciec, córka/syn, siostra/brat, ciotka/wujek, babcia/dziadek. They are gender exemplars, not the family attribute of a Gender–Career IAT. No occupation words cross gender and domain categories. Academic stimuli are discipline names: fizyka, chemia, matematyka, astronomia, informatyka; historia, filozofia, literatura, filologia, archeologia. Lengths overlap across the domain sets, but lexical frequency and reading difficulty have **not** been empirically matched. Gender sets are shorter than domain sets; equal counts and counterbalancing reduce design imbalance but cannot validate the words.
+Gender uses paired familiar kinship terms: matka/ojciec, córka/syn, siostra/brat, ciotka/wujek, babcia/dziadek. They are gender exemplars, not the family attribute of a Gender–Career IAT. No occupation words cross gender and domain categories. Academic stimuli are discipline names: fizyka, chemia, matematyka, astronomia, informatyka; historia, filozofia, literatura, filologia, archeologia. Lengths overlap across the domain sets, but lexical frequency and reading difficulty have **not** been empirically matched. Gender sets are shorter than domain sets; approximately balanced counts and counterbalancing reduce design imbalance but cannot validate the words.
 
 This is an adaptation informed by the [Project Implicit Gender–Science supplementary materials](https://www.projectimplicit.net/nosek/papers/SGN2010/SGN2010supplement.pdf), not a reproduction or validated Polish norm set. The narrower Polish label NAUKI ŚCISŁE motivates mathematics/physical/computational disciplines and avoiding ambiguous biology/engineering exemplars. Humanities here excludes fine arts/music; that changes coverage relative to some English versions. Do not compare individuals with published norms as if the instruments were identical.
 
-Before research, pilot category agreement, word familiarity, reading difficulty and length/frequency in the intended age group. Review discipline coverage (including archaeology), kinship familiarity and binary gender framing. The two gender categories are an operational simplification, not a statement about all identities. To change words, edit `js/stimuli.js`, use unique plain text and keep equal set sizes dividing 5, 10 and 20 (normally five words/category); rerun tests. Changing category IDs or block counts requires a design and scoring review.
+Before research, pilot category agreement, word familiarity, reading difficulty and length/frequency in the intended age group. Review discipline coverage (including archaeology), kinship familiarity and binary gender framing. The two gender categories are an operational simplification, not a statement about all identities. To change words, edit `js/stimuli.js`, use unique plain text and keep equal, nonempty set sizes (normally five words/category); rerun tests. Changing category IDs or block counts requires a design and scoring review.
 
 ## Response timing and data dictionary
 
-Each trial shows fixed labels above and on both buttons. The word appears after two animation frames settle the layout. `performance.now()` records onset immediately after making it visible. That is a browser paint-proximate estimate, **not verified physical display onset**. The initial `pointerdown` records first contact rather than finger release; no transition animation runs. Accessible keyboard button activation also works. Preventing the native pointer click plus accepting only synthetic/keyboard `click` with `detail===0` prevents double counting. Additional non-primary touches are ignored.
+Each trial shows fixed category labels on both bottom buttons only. The word appears after two animation frames settle the layout. `performance.now()` records onset immediately after making it visible. That is a browser paint-proximate estimate, **not verified physical display onset**. The initial `pointerdown` records first contact rather than finger release; no transition animation runs. Accessible keyboard button activation also works. Preventing the native pointer click plus accepting only synthetic/keyboard `click` with `detail===0` prevents double counting. Additional non-primary touches are ignored.
 
 Wrong responses show a red X and leave the word/buttons present until the correct response. The first response is preserved. Each subsequent response is separately retained, including repeated wrong corrections. Correct completion clears the display; a 250 ms blank gap is excluded from scored RT. Simultaneous touches, browser interrupts and finger placement can still affect real-world measurement; a touchscreen is a procedural adaptation requiring validation. The browser/device cannot promise laboratory timing accuracy ([jsPsych timing guidance](https://www.jspsych.org/latest/overview/timing-accuracy/)).
 
@@ -99,7 +105,7 @@ Implemented variant: **D1, built-in error correction, no lower-tail deletion**.
 
 - Score blocks 3, 4, 6, 7; exclude single-category blocks 1, 2, 5.
 - Use onset-to-final-correct latency, including correction. No added 600 ms or block-mean replacement.
-- Refuse a session if more than 10% of its 120 combined latencies are below 300 ms, assessed before slow-trial removal. Retain fast trials in otherwise eligible sessions; no 400 ms deletion or winsorisation.
+- Refuse a session if more than 10% of its 90 combined latencies are below 300 ms, assessed before slow-trial removal. Retain fast trials in otherwise eligible sessions; no 400 ms deletion or winsorisation.
 - Remove latencies strictly above 10,000 ms; retain exactly 10,000 ms and all first trials.
 - Calculate inclusive sample SD over concatenated retained trials of 3+6, and separately 4+7 (`n−1` denominator). This is not an average of within-block SDs.
 - Compute `(mean_B − mean_A)/SD` for each pair. D is the equal-weight average of the two quotients. Practice and test pairs both contribute.
@@ -108,7 +114,7 @@ Positive D means faster A; negative means faster B. The results' mapping means c
 
 ### Additional demonstration safeguards
 
-Distinct from the published D1 rules: require all 200 completed, uniquely indexed trials, valid finite initial/final responses and coherent A/B block mappings; reject interruption; reject initial error proportion >35% in combined blocks; require at least 80% retained in **each** scored block (16/20 or 32/40); reject zero/invalid pair SD. These conservative local choices are not established psychometric standards and must be reviewed/pre-registered for research. Their role is to avoid educational numerical feedback from unusable sessions. Initial error accuracy is assessed before slow deletion. No numeric D is displayed on failure; a reason and restart are provided.
+Distinct from the published D1 rules: require all 150 completed, uniquely indexed trials, valid finite initial/final responses and coherent A/B block mappings; reject interruption; reject initial error proportion >35% in combined blocks; require at least 80% retained in **each** scored block (12/15 or 24/30); reject zero/invalid pair SD. These conservative local choices are not established psychometric standards and must be reviewed/pre-registered for research. Their role is to avoid educational numerical feedback from unusable sessions. Initial error accuracy is assessed before slow deletion. No numeric D is displayed on failure; a reason and restart are provided.
 
 ## Privacy and participation
 
@@ -128,6 +134,21 @@ Find the Mac's Wi-Fi address in **System Settings → Wi-Fi → Details → TCP/
 
 Test actual iOS Safari and Android Chrome with navigation bars visible; use the physical-device checklist in `TESTING.md`. Modern pointer events, system fonts and dynamic/small viewport units are used with a `100vh` fallback. No fullscreen, screen lock or orientation-lock API is required. In-app QR scanner browsers may have different controls; open the page in Safari/Chrome. Keep orientation fixed during blocks. A local HTTP phone test does not substitute for checking the final HTTPS Pages URL.
 
+## Review and push this refinement
+
+This refinement is local and uncommitted. The working tree was clean before editing. The existing remote is `https://github.com/ZukowskiPiotr/Workshops-IAT.git`, branch `main`. No clone, new dependency, remote push or deployment was performed. After reviewing and testing:
+
+```sh
+cd /Users/zukowskipiotr/Documents/LSN/Noc_Anglistow/Workshops-IAT
+git status --short
+git diff --check
+git diff
+node tests/core.cjs
+git add index.html css/styles.css js/config.js js/design.js js/experiment.js js/results.js js/scoring.js js/touch-plugin.js tests/core.cjs tests/browser.cjs README.md TESTING.md
+git commit -m "Refine LSN IAT palette and shorten workshop to 150 trials"
+git push origin main
+```
+
 ## Publish to an existing GitHub repository
 
 The following are instructions, not actions already performed. Use your existing repository URL/branch. Do not force-push or replace unrelated repository files. If this folder is already the repository checkout, inspect `git status` and skip cloning/copying. Otherwise, clone the existing repository into a separate folder; a repository root hosting approach is shown:
@@ -141,7 +162,7 @@ git status
 Inspect that checkout first. If its root already contains another site, use an agreed subfolder (e.g. `gender-science/`) and keep that site's entry point, or a separate repository. Copy **all application files** into the intended hosting folder using Finder, including `js`, `css`, `vendor` and `.nojekyll`. The source files stay in the requested local directory. For an otherwise empty repository root:
 
 ```sh
-cp -R /Users/zukowskipiotr/Documents/LSN/Noc_Anglistow/gender-career-iat/. ~/Documents/iat-pages/
+cp -R /Users/zukowskipiotr/Documents/LSN/Noc_Anglistow/Workshops-IAT/. ~/Documents/iat-pages/
 cd ~/Documents/iat-pages
 git status
 git add index.html css js vendor README.md TESTING.md LICENSE tests .nojekyll
